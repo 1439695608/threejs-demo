@@ -1,0 +1,3 @@
+一、具体使用时关注入口文件threejs-3ddemo\examples\webgl_loader_obj.html即可，注意直接浏览时浏览器跨域问题
+
+二、这版demo只在于功能技术预研，代码没做封装，具体使用时注意代码规范
