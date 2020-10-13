@@ -6,3 +6,5 @@
     connect() 方法用于连接socket服务，参数：websocektUrl：socket服务地址, freahRate：页面数据更新频率，为防止socket服务数据更新过快，页面上点跳动剧烈，值分为低中高三挡 FREAH_RATE_LOW，FREAH_RATE_MIDDLE，FREAH_RATE_HIGH
 
 三、因为本次例子只是作为技术预研demo使用，除了threejs未引入任何框架。后期真正进入项目开发时，可以根据项目需要，选取合适的包管理工具，或者框架，将building.js中的方法分类放到不同文件中，方便代码维护与阅读
+
+如有疑问，参考redmine.docx
