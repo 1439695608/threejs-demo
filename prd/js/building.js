@@ -192,7 +192,7 @@ function createWordItem(position, text) {
     let ctx = canvas.getContext('2d')
     ctx.scale(1, -1)
     //生成图片
-    img.src = "./models/talk3.png"
+    img.src = "./img/talk3.png"
     img.onload = function(){
         //制作矩形
         ctx.fillStyle = "rgba(0,0,0,0.4)";
