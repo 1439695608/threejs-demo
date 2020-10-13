@@ -1,3 +1,8 @@
-一、具体使用时关注入口文件threejs-3ddemo\examples\webgl_loader_obj.html即可，注意直接浏览时浏览器跨域问题
+一、具体使用时关注入口文件threejs-3ddemo\prd\building3D.html即可，注意直接浏览时浏览器跨域问题
 
-二、这版demo只在于功能技术预研，代码没做封装，具体使用时注意代码规范
+二、js/building.js,是封装好的一个建筑模型对象，
+    构造函数需要传递两个参数：container：外部div盒子、3D建筑模型会画在这个盒子中, item_arr:建筑中画的点信息，具体使用见building3D.html
+    run()方法用于启动3D建筑模型，
+    connect() 方法用于连接socket服务，参数：websocektUrl：socket服务地址, freahRate：页面数据更新频率，为防止socket服务数据更新过快，页面上点跳动剧烈，值分为低中高三挡 FREAH_RATE_LOW，FREAH_RATE_MIDDLE，FREAH_RATE_HIGH
+
+三、因为本次例子只是作为技术预研demo使用，除了threejs未引入任何框架。后期真正进入项目开发时，可以根据项目需要，选取合适的包管理工具，或者框架，将building.js中的方法分类放到不同文件中，方便代码维护与阅读
