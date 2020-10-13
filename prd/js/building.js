@@ -1,3 +1,15 @@
+var camera, scene, renderer;
+var mouseX = 0, mouseY = 0;
+var windowHalfX = window.innerWidth / 2;
+var windowHalfY = window.innerHeight / 2;
+var object;
+var pivotX, pivotY // X轴，Y轴
+var press32 = false
+var isDrawLine = false
+var itemObjArr = []
+var isStop = false
+var isStopSpace = false
+var memoryArr= []
 function Building(container, item_arr) {
     // 页面点更新的速度，低、中、高
     this.FREAH_RATE_LOW = 600
@@ -7,27 +19,17 @@ function Building(container, item_arr) {
     this.container = container
     this.item_arr = item_arr
 }
-var camera, scene, renderer;
-var mouseX = 0, mouseY = 0;
-var windowHalfX = window.innerWidth / 2;
-var windowHalfY = window.innerHeight / 2;
-var object;
-var pivot5, pivot6
-var press32 = false
-var isDrawLine = false
-var itemObjArr = []
-var isStop = false
-var isStopSpace = false
-var memoryArr= []
 Building.prototype.run = function () {
     initView()
     initEvent()
-    animate();
+    animate()
 }
 Building.prototype.connect = function (websocektUrl, freahRate) {
     this.freahRate = freahRate
     initNet(websocektUrl)
 }
+
+
 // 初始化部分
 // 初始化相机，场景，光源，皮肤
 function initView() {
@@ -54,27 +56,26 @@ function initView() {
     this.container.appendChild( renderer.domElement );
     // manager
     function loadModel() {
-        pivot6 = new THREE.Object3D();
-        pivot6.position.set(0, -500, 0)
-        pivot5 = new THREE.Object3D();
-        pivot5.position.set(0, 0, 0)
-        pivot6.add(pivot5)
+        pivotY = new THREE.Object3D();
+        pivotY.position.set(0, -500, 0)
+        pivotX = new THREE.Object3D();
+        pivotX.position.set(0, 0, 0)
+        pivotY.add(pivotX)
         // object.traverse( function ( child ) {
         //     if ( child.isMesh ) child.material.map = texture;
         // } );
         object.position.set(-1000,-500,0)
         //scene.add( object );
-        pivot5.add(object);
-        updateItem(pivot6)
+        pivotX.add(object);
+        updateItem(pivotY)
         let helper = new THREE.GridHelper( 1500, 60, 0xff0000, 0x404040 );
         helper.position.y = 25
-        pivot6.add( helper );
-        scene.add( pivot6 );
-        pivot5.rotation.x = -1.575
-        // pivot5.translateY(-6000)
+        pivotY.add( helper );
+        scene.add( pivotY );
+        pivotX.rotation.x = -1.575
+        // pivotX.translateY(-6000)
     }
 }
-// 初始化事件
 function initEvent() {
     // document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     // window.addEventListener( 'resize', onWindowResize, false );
@@ -85,33 +86,28 @@ function initEvent() {
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('keyup', onKeyUp)
 }
-// 初始化网络连接
 function initNet(websocektUrl) {
     if ("WebSocket" in window) {
         console.log("您的浏览器支持 WebSocket!");
         // 打开一个 web socket
         var ws = new WebSocket(websocektUrl);
         ws.onopen = function() {
-            // Web Socket 已连接上，使用 send() 方法发送数据
             ws.send({data: '连接成功'});
         };
 
         ws.onmessage = function (evt) {
             var received_msg = evt.data;
-            // console.log("数据已接收...", received_msg);
             this.item_arr = JSON.parse(received_msg)
-            if(pivot6 && this.freahRate > 300) {
+            if(pivotY && this.freahRate > 300) {
                 this.freahRate = 0
-                updateItem(pivot6)
+                updateItem(pivotY)
             }
         };
 
         ws.onclose = function() {
-            // 关闭 websocket
             console.log("连接已关闭...");
         };
     } else {
-        // 浏览器不支持 WebSocket
         console.log("您的浏览器不支持 WebSocket!");
     }
 }
@@ -122,10 +118,10 @@ function animate() {
 
 
 // dom操作
-function updateItem(pivot6) {
+function updateItem(pivotY) {
     // 清空之前的点
     for (let itemObj of itemObjArr) {
-        pivot6.remove(itemObj)
+        pivotY.remove(itemObj)
     }
     // 画新点
     for (let item of this.item_arr) {
@@ -139,14 +135,14 @@ function updateItem(pivot6) {
 
         itemObjArr.push(cube)
         createWord(item)
-        pivot6.add( cube );
+        pivotY.add( cube );
         if (isDrawLine) {
             for (let i = 0; i<item.linePoint.length;i++) {
                 let item2 = this.item_arr[item.linePoint[i]]
                 if (item2) {
                     var lineImg = createLine(item, item2, 0x666666);
                     itemObjArr.push(lineImg)
-                    pivot6.add( lineImg );
+                    pivotY.add( lineImg );
                 } else {
                 }
             }
@@ -210,16 +206,14 @@ function createWordItem(position, text) {
         textObj.position.set(position.positionX + 20, position.positionY+ 20, position.positionZ);
         // textObj.rotation.x = 2
         itemObjArr.push(textObj)
-        pivot6.add( textObj );
+        pivotY.add( textObj );
     }
 }
 
 
 //事件函数
 function onProgress( xhr ) {
-
     if ( xhr.lengthComputable ) {
-
         var percentComplete = xhr.loaded / xhr.total * 100;
         console.log( 'model ' + Math.round( percentComplete, 2 ) + '% downloaded' );
     }
@@ -227,32 +221,30 @@ function onProgress( xhr ) {
 }
 function onError() {}
 function onKeyDown(event) {
-    console.log('keypress：',event.keyCode)
     if (event.keyCode == 32) {
         isStopSpace = !isStopSpace
         press32 = true
     }
     if (event.keyCode == 76) {
         isDrawLine = true
-        updateItem(pivot6)
+        updateItem(pivotY)
     }
     if (event.keyCode == 78) {
         isDrawLine = false
-        updateItem(pivot6)
+        updateItem(pivotY)
     }
 }
 function onKeyUp (event) {
-    console.log('keyup',event.keyCode)
     if (event.keyCode == 32) {
         press32 = false
     }
 }
 function onDocumenDblClick(e) {
-    console.log(pivot5.position.y)
-    if (pivot5.position.y < -5000) {
-        pivot5.position.y = 0
+    console.log(pivotX.position.y)
+    if (pivotX.position.y < -5000) {
+        pivotX.position.y = 0
     } else {
-        pivot5.position.y = -6000
+        pivotX.position.y = -6000
     }
 }
 function onMouseDown(event){
@@ -266,7 +258,6 @@ function onMouseDown(event){
 function onMouseup(event){
     isStop = false
     mouseDown = false;
-
     document.removeEventListener("mousemove", onMouseMove2);
 }
 function onMouseMove2(event){
@@ -288,21 +279,15 @@ function onMouseMove2(event){
     }
 }
 function onWindowResize() {
-
     windowHalfX = window.innerWidth / 2;
     windowHalfY = window.innerHeight / 2;
-
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
     renderer.setSize( window.innerWidth, window.innerHeight );
-
 }
 function onDocumentMouseMove( event ) {
-
     mouseX = ( event.clientX - windowHalfX ) / 2;
     mouseY = ( event.clientY - windowHalfY ) / 2;
-
 }
 function rotateScene2(deltaX, deltaY) {
     /*
@@ -312,8 +297,8 @@ function rotateScene2(deltaX, deltaY) {
            并且将当前的坐标付给上一个坐标clientX1，计算两个坐标的之间的差clientX2-clientX1，
            将得到的差值除以一个常量（这个常量可以根据自己的需要调整），得到旋转的角度
        */
-    pivot6.position.x += deltaX
-    pivot6.position.y += -deltaY
+    pivotY.position.x += deltaX
+    pivotY.position.y += -deltaY
 }
 //设置模型旋转速度，可以根据自己的需要调整
 function rotateScene(deltaX, deltaY){
@@ -321,8 +306,8 @@ function rotateScene(deltaX, deltaY){
     var deg = deltaX/279;
     var degX = deltaY/279;
     //deg 设置模型旋转的弧度
-    // if ((pivot5.rotation.x + degX)< -1.5 || (pivot5.rotation.x + degX) > 0) {
-    // 	console.log('角度限制：', pivot5.rotation.x)
+    // if ((pivotX.rotation.x + degX)< -1.5 || (pivotX.rotation.x + degX) > 0) {
+    // 	console.log('角度限制：', pivotX.rotation.x)
     // } else {
     //
     // }
@@ -330,8 +315,8 @@ function rotateScene(deltaX, deltaY){
         camera.position.y += deltaY * 3
         // camera.position.x += deltaX
     }
-    pivot6.rotation.y += deg;
-    // pivot5.rotation.x += degX;
+    pivotY.rotation.y += deg;
+    // pivotX.rotation.x += degX;
     // camera.position.y = ( deltaY + camera.position.y ) * 0.5;
     render();
 }
@@ -339,12 +324,12 @@ function rotateScene(deltaX, deltaY){
 // 根据浏览器刷新频率定时执行刷新页面，可以做一些定时任务
 function render() {
     this.freahRate++
-    if (!isStop && !isStopSpace && pivot6) {
-        pivot6.rotation.y += 0.005;
+    if (!isStop && !isStopSpace && pivotY) {
+        pivotY.rotation.y += 0.005;
     }
     // camera.position.x += ( mouseX - camera.position.x ) * 1;
     // camera.position.y = ( mouseY + camera.position.y ) * 0.11;
-    // console.log(pivot5.rotation)
+    // console.log(pivotX.rotation)
     // console.log('camera:', camera.position)
     // console.log('scene:', scene.position)
     // scene.position.set(3000,0,0)
