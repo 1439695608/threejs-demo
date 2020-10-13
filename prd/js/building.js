@@ -44,9 +44,6 @@ function initView() {
     manager.onProgress = function ( item, loaded, total ) {
         console.log( item, loaded, total )
     };
-    // texture
-    var textureLoader = new THREE.TextureLoader( manager );
-    var texture = textureLoader.load( 'textures/UV_Grid_Sm.jpg' );
     var loader = new THREE.OBJLoader( manager );
     loader.load( 'models/obj/male02/test.obj', function ( obj ) {
         object = obj;
@@ -62,9 +59,9 @@ function initView() {
         pivot5 = new THREE.Object3D();
         pivot5.position.set(0, 0, 0)
         pivot6.add(pivot5)
-        object.traverse( function ( child ) {
-            if ( child.isMesh ) child.material.map = texture;
-        } );
+        // object.traverse( function ( child ) {
+        //     if ( child.isMesh ) child.material.map = texture;
+        // } );
         object.position.set(-1000,-500,0)
         //scene.add( object );
         pivot5.add(object);
