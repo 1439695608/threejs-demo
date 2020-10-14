@@ -9,6 +9,7 @@ var isDrawLine = false
 var itemObjArr = []
 var isStop = false
 var isStopSpace = false
+var freahTime = 0
 var memoryArr= []
 function Building(container, item_arr) {
     // 页面点更新的速度，低、中、高
@@ -17,6 +18,7 @@ function Building(container, item_arr) {
     this.FREAH_RATE_HIGH = 200
     this.freahRate = this.FREAH_RATE_MIDDLE
     this.container = container
+    this.connectStatus = false
     this.item_arr = item_arr
 }
 Building.prototype.run = function () {
@@ -93,12 +95,13 @@ function initNet(websocektUrl) {
         var ws = new WebSocket(websocektUrl);
         ws.onopen = function() {
             ws.send({data: '连接成功'});
+            this.connectStatus = true
         };
 
         ws.onmessage = function (evt) {
             var received_msg = evt.data;
             this.item_arr = JSON.parse(received_msg)
-            if(pivotY && this.freahRate > 300) {
+            if(pivotY && freahTime > this.freahRate) {
                 this.freahRate = 0
                 updateItem(pivotY)
             }
@@ -120,9 +123,7 @@ function animate() {
 // dom操作
 function updateItem(pivotY) {
     // 清空之前的点
-    for (let itemObj of itemObjArr) {
-        pivotY.remove(itemObj)
-    }
+    removeItem()
     // 画新点
     for (let item of this.item_arr) {
         let color = item.status == 1 ? 0xff0000 : 0x00ff00
@@ -132,7 +133,7 @@ function updateItem(pivotY) {
         memoryArr.push(material)
         var cube = new THREE.Mesh( geometry, material );
         cube.position.set( item.positionX, item.positionY, item.positionZ );
-
+        cube.name = 'freahItem'
         itemObjArr.push(cube)
         createWord(item)
         pivotY.add( cube );
@@ -147,6 +148,27 @@ function updateItem(pivotY) {
                 }
             }
         }
+    }
+}
+function removeItem() {
+    let object3D = scene.children[2]
+    if (typeof object3D != 'undefined') {
+        let tempItemChildren = object3D.children.filter((item) => {
+            // console.log(item)
+            return item.name == 'freahItem'
+        })
+        for (let item of tempItemChildren) {
+            // if(item instanceof THREE.Mesh||item instanceof THREE.Line){
+            //     console.log(111)
+            // }
+            item.remove();
+            object3D.remove(item);
+            if(item.material.map) item.material.map.dispose();
+            item.material.dispose();
+            item.geometry.dispose();
+        }
+        // console.log(tempItemChildren)
+        // console.log(renderer.info)
     }
 }
 function createLine (point1, point2, color){
@@ -164,7 +186,7 @@ function createLine (point1, point2, color){
     });
     memoryArr.push(material)
     let line = new THREE.Line(geometry,material);
-
+    line.name = 'freahItem'
     return line;
 }
 function createWord(item) {
@@ -203,6 +225,7 @@ function createWordItem(position, text) {
         memoryArr.push(material)
         let textObj = new THREE.Sprite(material);
         textObj.scale.set(100, 0.2*100, 100);
+        textObj.name = 'freahItem'
         textObj.position.set(position.positionX + 20, position.positionY+ 20, position.positionZ);
         // textObj.rotation.x = 2
         itemObjArr.push(textObj)
@@ -323,9 +346,16 @@ function rotateScene(deltaX, deltaY){
 
 // 根据浏览器刷新频率定时执行刷新页面，可以做一些定时任务
 function render() {
-    this.freahRate++
+    // if (this.connectStatus) {
+    //     freahTime++
+    // }
+    freahTime++
     if (!isStop && !isStopSpace && pivotY) {
         pivotY.rotation.y += 0.005;
+        if (freahTime > 100) {
+            updateItem(pivotY)
+            freahTime = 0
+        }
     }
     // camera.position.x += ( mouseX - camera.position.x ) * 1;
     // camera.position.y = ( mouseY + camera.position.y ) * 0.11;
