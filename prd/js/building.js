@@ -6,11 +6,9 @@ var object;
 var pivotX, pivotY // X轴，Y轴
 var press32 = false
 var isDrawLine = false
-var itemObjArr = []
 var isStop = false
 var isStopSpace = false
 var freahTime = 0
-var memoryArr= []
 function Building(container, item_arr) {
     // 页面点更新的速度，低、中、高
     this.FREAH_RATE_LOW = 600
@@ -87,6 +85,12 @@ function initEvent() {
     document.addEventListener('dblclick', onDocumenDblClick);
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('keyup', onKeyUp)
+    //给页面绑定滑轮滚动事件
+    if (document.addEventListener) {
+        document.addEventListener('DOMMouseScroll', scrollFunc, false);
+    }
+    //滚动滑轮触发scrollFunc方法
+    window.onmousewheel = document.onmousewheel = scrollFunc;
 }
 function initNet(websocektUrl) {
     if ("WebSocket" in window) {
@@ -129,12 +133,9 @@ function updateItem(pivotY) {
         let color = item.status == 1 ? 0xff0000 : 0x00ff00
         var geometry = new THREE.CylinderBufferGeometry( 10, 10, 20, 32 );
         var material = new THREE.MeshBasicMaterial( {color: color} );
-        memoryArr.push(geometry)
-        memoryArr.push(material)
         var cube = new THREE.Mesh( geometry, material );
         cube.position.set( item.positionX, item.positionY, item.positionZ );
         cube.name = 'freahItem'
-        itemObjArr.push(cube)
         createWord(item)
         pivotY.add( cube );
         if (isDrawLine) {
@@ -142,7 +143,6 @@ function updateItem(pivotY) {
                 let item2 = this.item_arr[item.linePoint[i]]
                 if (item2) {
                     var lineImg = createLine(item, item2, 0x666666);
-                    itemObjArr.push(lineImg)
                     pivotY.add( lineImg );
                 } else {
                 }
@@ -184,7 +184,6 @@ function createLine (point1, point2, color){
     let material = new THREE.LineBasicMaterial({
         color:color
     });
-    memoryArr.push(material)
     let line = new THREE.Line(geometry,material);
     line.name = 'freahItem'
     return line;
@@ -222,13 +221,11 @@ function createWordItem(position, text) {
         // var spriteMap = new THREE.TextureLoader().load( url );
         //使用Sprite显示文字
         let material = new THREE.SpriteMaterial({map:texture, color: 0xffffff});
-        memoryArr.push(material)
         let textObj = new THREE.Sprite(material);
         textObj.scale.set(100, 0.2*100, 100);
         textObj.name = 'freahItem'
         textObj.position.set(position.positionX + 20, position.positionY+ 20, position.positionZ);
         // textObj.rotation.x = 2
-        itemObjArr.push(textObj)
         pivotY.add( textObj );
     }
 }
@@ -323,7 +320,7 @@ function rotateScene2(deltaX, deltaY) {
     pivotY.position.x += deltaX
     pivotY.position.y += -deltaY
 }
-//设置模型旋转速度，可以根据自己的需要调整
+//设置模型旋转灵敏度，可以根据自己的需要调整
 function rotateScene(deltaX, deltaY){
     //设置旋转方向和移动方向相反，所以加了个负号
     var deg = deltaX/279;
@@ -343,7 +340,36 @@ function rotateScene(deltaX, deltaY){
     // camera.position.y = ( deltaY + camera.position.y ) * 0.5;
     render();
 }
-
+function scrollFunc (e) {
+    e = e || window.event;
+    if (e.wheelDelta) {  //判断浏览器IE，谷歌滑轮事件
+        if (e.wheelDelta > 0) { //当滑轮向上滚动时
+            if (camera.position.z - 30 > 1000) {
+                camera.position.z -= 30
+                // camera.fov += 0.1
+            }
+        }
+        if (e.wheelDelta < 0) { //当滑轮向下滚动时
+            if (camera.position.z + 30 < 6000) {
+                camera.position.z += 30
+                // camera.fov -= 0.1
+            }
+        }
+    } else if (e.detail) {  //Firefox滑轮事件
+        if (e.detail> 0) { //当滑轮向上滚动时
+            if (camera.position.z - 30 > 1000) {
+                camera.position.z -= 30
+                // camera.fov += 0.1
+            }
+        }
+        if (e.detail< 0) { //当滑轮向下滚动时
+            if (camera.position.z + 30 < 6000) {
+                camera.position.z += 30
+                // camera.fov -= 0.1
+            }
+        }
+    }
+}
 // 根据浏览器刷新频率定时执行刷新页面，可以做一些定时任务
 function render() {
     // if (this.connectStatus) {
@@ -352,7 +378,7 @@ function render() {
     freahTime++
     if (!isStop && !isStopSpace && pivotY) {
         pivotY.rotation.y += 0.005;
-        if (freahTime > 100) {
+        if (freahTime > 400) {
             updateItem(pivotY)
             freahTime = 0
         }
