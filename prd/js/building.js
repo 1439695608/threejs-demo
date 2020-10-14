@@ -9,6 +9,7 @@ var isDrawLine = false
 var isStop = false
 var isStopSpace = false
 var freahTime = 0
+
 function Building(container, item_arr) {
     // 页面点更新的速度，低、中、高
     this.FREAH_RATE_LOW = 600
@@ -19,6 +20,7 @@ function Building(container, item_arr) {
     this.connectStatus = false
     this.item_arr = item_arr
 }
+
 Building.prototype.run = function () {
     initView()
     initEvent()
@@ -33,27 +35,28 @@ Building.prototype.connect = function (websocektUrl, freahRate) {
 // 初始化部分
 // 初始化相机，场景，光源，皮肤
 function initView() {
-    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 5000 );
-    camera.position.set(0,500,2000)
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
+    camera.position.set(0, 500, 2000)
     // scene
     scene = new THREE.Scene();
-    var ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
-    scene.add( ambientLight );
-    var pointLight = new THREE.PointLight( 0xffffff, 0.8 );
-    camera.add( pointLight );
-    scene.add( camera );
-    var manager = new THREE.LoadingManager( loadModel );
-    manager.onProgress = function ( item, loaded, total ) {
-        console.log( item, loaded, total )
+    var ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
+    scene.add(ambientLight);
+    var pointLight = new THREE.PointLight(0xffffff, 0.8);
+    camera.add(pointLight);
+    scene.add(camera);
+    var manager = new THREE.LoadingManager(loadModel);
+    manager.onProgress = function (item, loaded, total) {
+        console.log(item, loaded, total)
     };
-    var loader = new THREE.OBJLoader( manager );
-    loader.load( 'models/obj/male02/test.obj', function ( obj ) {
+    var loader = new THREE.OBJLoader(manager);
+    loader.load('models/obj/male02/test.obj', function (obj) {
         object = obj;
-    }, onProgress, onError );
+    }, onProgress, onError);
     renderer = new THREE.WebGLRenderer();
-    renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.setSize( this.container.getBoundingClientRect().width, this.container.getBoundingClientRect().height );
-    this.container.appendChild( renderer.domElement );
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(this.container.getBoundingClientRect().width, this.container.getBoundingClientRect().height);
+    this.container.appendChild(renderer.domElement);
+
     // manager
     function loadModel() {
         pivotY = new THREE.Object3D();
@@ -64,24 +67,25 @@ function initView() {
         // object.traverse( function ( child ) {
         //     if ( child.isMesh ) child.material.map = texture;
         // } );
-        object.position.set(-1000,-500,0)
+        object.position.set(-1000, -500, 0)
         //scene.add( object );
         pivotX.add(object);
         updateItem(pivotY)
-        let helper = new THREE.GridHelper( 1500, 60, 0xff0000, 0x404040 );
+        let helper = new THREE.GridHelper(1500, 60, 0xff0000, 0x404040);
         helper.position.y = 25
-        pivotY.add( helper );
-        scene.add( pivotY );
+        pivotY.add(helper);
+        scene.add(pivotY);
         pivotX.rotation.x = -1.575
         // pivotX.translateY(-6000)
     }
 }
+
 function initEvent() {
     // document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     // window.addEventListener( 'resize', onWindowResize, false );
     // document.addEventListener( 'mousemove', onMouseMove2, false );
-    document.addEventListener( 'mousedown', onMouseDown, false );
-    document.addEventListener( 'mouseup', onMouseup, false );
+    document.addEventListener('mousedown', onMouseDown, false);
+    document.addEventListener('mouseup', onMouseup, false);
     document.addEventListener('dblclick', onDocumenDblClick);
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('keyup', onKeyUp)
@@ -92,12 +96,13 @@ function initEvent() {
     //滚动滑轮触发scrollFunc方法
     window.onmousewheel = document.onmousewheel = scrollFunc;
 }
+
 function initNet(websocektUrl) {
     if ("WebSocket" in window) {
         console.log("您的浏览器支持 WebSocket!");
         // 打开一个 web socket
         var ws = new WebSocket(websocektUrl);
-        ws.onopen = function() {
+        ws.onopen = function () {
             ws.send({data: '连接成功'});
             this.connectStatus = true
         };
@@ -105,21 +110,22 @@ function initNet(websocektUrl) {
         ws.onmessage = function (evt) {
             var received_msg = evt.data;
             this.item_arr = JSON.parse(received_msg)
-            if(pivotY && freahTime > this.freahRate) {
+            if (pivotY && freahTime > this.freahRate) {
                 this.freahRate = 0
                 updateItem(pivotY)
             }
         };
 
-        ws.onclose = function() {
+        ws.onclose = function () {
             console.log("连接已关闭...");
         };
     } else {
         console.log("您的浏览器不支持 WebSocket!");
     }
 }
+
 function animate() {
-    requestAnimationFrame( animate );
+    requestAnimationFrame(animate);
     render();
 }
 
@@ -131,25 +137,26 @@ function updateItem(pivotY) {
     // 画新点
     for (let item of this.item_arr) {
         let color = item.status == 1 ? 0xff0000 : 0x00ff00
-        var geometry = new THREE.CylinderBufferGeometry( 10, 10, 20, 32 );
-        var material = new THREE.MeshBasicMaterial( {color: color} );
-        var cube = new THREE.Mesh( geometry, material );
-        cube.position.set( item.positionX, item.positionY, item.positionZ );
+        var geometry = new THREE.CylinderBufferGeometry(10, 10, 20, 32);
+        var material = new THREE.MeshBasicMaterial({color: color});
+        var cube = new THREE.Mesh(geometry, material);
+        cube.position.set(item.positionX, item.positionY, item.positionZ);
         cube.name = 'freahItem'
         createWord(item)
-        pivotY.add( cube );
+        pivotY.add(cube);
         if (isDrawLine) {
-            for (let i = 0; i<item.linePoint.length;i++) {
+            for (let i = 0; i < item.linePoint.length; i++) {
                 let item2 = this.item_arr[item.linePoint[i]]
                 if (item2) {
                     var lineImg = createLine(item, item2, 0x666666);
-                    pivotY.add( lineImg );
+                    pivotY.add(lineImg);
                 } else {
                 }
             }
         }
     }
 }
+
 function removeItem() {
     let object3D = scene.children[2]
     if (typeof object3D != 'undefined') {
@@ -163,7 +170,7 @@ function removeItem() {
             // }
             item.remove();
             object3D.remove(item);
-            if(item.material.map) item.material.map.dispose();
+            if (item.material.map) item.material.map.dispose();
             item.material.dispose();
             item.geometry.dispose();
         }
@@ -171,33 +178,36 @@ function removeItem() {
         // console.log(renderer.info)
     }
 }
-function createLine (point1, point2, color){
+
+function createLine(point1, point2, color) {
     let geometry = new THREE.Geometry();
 
-    const p1 = new THREE.Vector3(point1.positionX,point1.positionY,point1.positionZ);
-    const p2 = new THREE.Vector3(point2.positionX,point2.positionY,point2.positionZ);
-    const p3 = new THREE.Vector3(point1.positionX,point1.positionY,point1.positionZ);
+    const p1 = new THREE.Vector3(point1.positionX, point1.positionY, point1.positionZ);
+    const p2 = new THREE.Vector3(point2.positionX, point2.positionY, point2.positionZ);
+    const p3 = new THREE.Vector3(point1.positionX, point1.positionY, point1.positionZ);
     geometry.vertices.push(p1, p2, p3);
 
     //注意这里使用的是LineBasicMaterial 实线
     //https://threejs.org/docs/index.html#api/zh/materials/LineBasicMaterial
     let material = new THREE.LineBasicMaterial({
-        color:color
+        color: color
     });
-    let line = new THREE.Line(geometry,material);
+    let line = new THREE.Line(geometry, material);
     line.name = 'freahItem'
     return line;
 }
+
 function createWord(item) {
     var text1 = '状态：'
     text1 += item.status == 1 ? '正常' : '失活'
-    var position1 = {positionX:item.positionX, positionY:item.positionY, positionZ: item.positionZ}
+    var position1 = {positionX: item.positionX, positionY: item.positionY, positionZ: item.positionZ}
     createWordItem(position1, text1)
 
     var text2 = '温度：33℃'
-    var position2 = {positionX:item.positionX, positionY:item.positionY + 20, positionZ: item.positionZ}
+    var position2 = {positionX: item.positionX, positionY: item.positionY + 20, positionZ: item.positionZ}
     createWordItem(position2, text2)
 }
+
 function createWordItem(position, text) {
     let canvas = document.createElement('canvas');
     var img = new Image();
@@ -207,39 +217,42 @@ function createWordItem(position, text) {
     ctx.scale(1, -1)
     //生成图片
     img.src = "./img/talk3.png"
-    img.onload = function(){
+    img.onload = function () {
         //制作矩形
         ctx.fillStyle = "rgba(0,0,0,0.4)";
         ctx.fillRect(0, -900, 1800, 400)
         // 将图片画到canvas上面上去！
-        ctx.drawImage(this,0,-400, 1800,400);
+        ctx.drawImage(this, 0, -400, 1800, 400);
         ctx.fillStyle = "#fff";
         ctx.font = 'normal 140px "微软雅黑"'
-        ctx.fillText(text, 500, 240 -400)
+        ctx.fillText(text, 500, 240 - 400)
         let texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
         // var spriteMap = new THREE.TextureLoader().load( url );
         //使用Sprite显示文字
-        let material = new THREE.SpriteMaterial({map:texture, color: 0xffffff});
+        let material = new THREE.SpriteMaterial({map: texture, color: 0xffffff});
         let textObj = new THREE.Sprite(material);
-        textObj.scale.set(100, 0.2*100, 100);
+        textObj.scale.set(100, 0.2 * 100, 100);
         textObj.name = 'freahItem'
-        textObj.position.set(position.positionX + 20, position.positionY+ 20, position.positionZ);
+        textObj.position.set(position.positionX + 20, position.positionY + 20, position.positionZ);
         // textObj.rotation.x = 2
-        pivotY.add( textObj );
+        pivotY.add(textObj);
     }
 }
 
 
 //事件函数
-function onProgress( xhr ) {
-    if ( xhr.lengthComputable ) {
+function onProgress(xhr) {
+    if (xhr.lengthComputable) {
         var percentComplete = xhr.loaded / xhr.total * 100;
-        console.log( 'model ' + Math.round( percentComplete, 2 ) + '% downloaded' );
+        console.log('model ' + Math.round(percentComplete, 2) + '% downloaded');
     }
 
 }
-function onError() {}
+
+function onError() {
+}
+
 function onKeyDown(event) {
     if (event.keyCode == 32) {
         isStopSpace = !isStopSpace
@@ -254,11 +267,13 @@ function onKeyDown(event) {
         updateItem(pivotY)
     }
 }
-function onKeyUp (event) {
+
+function onKeyUp(event) {
     if (event.keyCode == 32) {
         press32 = false
     }
 }
+
 function onDocumenDblClick(e) {
     console.log(pivotX.position.y)
     if (pivotX.position.y < -5000) {
@@ -267,21 +282,24 @@ function onDocumenDblClick(e) {
         pivotX.position.y = -6000
     }
 }
-function onMouseDown(event){
+
+function onMouseDown(event) {
     isStop = true
     event.preventDefault();
     mouseDown = true;
     mouseX = event.clientX;//出发事件时的鼠标指针的水平坐标
     mouseY = event.clientY;//出发事件时的鼠标指针的水平坐标
-    document.addEventListener( 'mousemove', onMouseMove2, false );
+    document.addEventListener('mousemove', onMouseMove2, false);
 }
-function onMouseup(event){
+
+function onMouseup(event) {
     isStop = false
     mouseDown = false;
     document.removeEventListener("mousemove", onMouseMove2);
 }
-function onMouseMove2(event){
-    if(!mouseDown){
+
+function onMouseMove2(event) {
+    if (!mouseDown) {
         return;
     }
     if (press32) {
@@ -298,17 +316,20 @@ function onMouseMove2(event){
         rotateScene(deltaX, deltaY);
     }
 }
+
 function onWindowResize() {
     windowHalfX = window.innerWidth / 2;
     windowHalfY = window.innerHeight / 2;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
-function onDocumentMouseMove( event ) {
-    mouseX = ( event.clientX - windowHalfX ) / 2;
-    mouseY = ( event.clientY - windowHalfY ) / 2;
+
+function onDocumentMouseMove(event) {
+    mouseX = (event.clientX - windowHalfX) / 2;
+    mouseY = (event.clientY - windowHalfY) / 2;
 }
+
 function rotateScene2(deltaX, deltaY) {
     /*
            鼠标移动控制模型旋转思想：
@@ -320,11 +341,12 @@ function rotateScene2(deltaX, deltaY) {
     pivotY.position.x += deltaX
     pivotY.position.y += -deltaY
 }
+
 //设置模型旋转灵敏度，可以根据自己的需要调整
-function rotateScene(deltaX, deltaY){
+function rotateScene(deltaX, deltaY) {
     //设置旋转方向和移动方向相反，所以加了个负号
-    var deg = deltaX/279;
-    var degX = deltaY/279;
+    var deg = deltaX / 279;
+    var degX = deltaY / 279;
     //deg 设置模型旋转的弧度
     // if ((pivotX.rotation.x + degX)< -1.5 || (pivotX.rotation.x + degX) > 0) {
     // 	console.log('角度限制：', pivotX.rotation.x)
@@ -340,7 +362,8 @@ function rotateScene(deltaX, deltaY){
     // camera.position.y = ( deltaY + camera.position.y ) * 0.5;
     render();
 }
-function scrollFunc (e) {
+
+function scrollFunc(e) {
     e = e || window.event;
     if (e.wheelDelta) {  //判断浏览器IE，谷歌滑轮事件
         if (e.wheelDelta > 0) { //当滑轮向上滚动时
@@ -356,13 +379,13 @@ function scrollFunc (e) {
             }
         }
     } else if (e.detail) {  //Firefox滑轮事件
-        if (e.detail> 0) { //当滑轮向上滚动时
+        if (e.detail > 0) { //当滑轮向上滚动时
             if (camera.position.z - 30 > 1000) {
                 camera.position.z -= 30
                 // camera.fov += 0.1
             }
         }
-        if (e.detail< 0) { //当滑轮向下滚动时
+        if (e.detail < 0) { //当滑轮向下滚动时
             if (camera.position.z + 30 < 6000) {
                 camera.position.z += 30
                 // camera.fov -= 0.1
@@ -370,6 +393,7 @@ function scrollFunc (e) {
         }
     }
 }
+
 // 根据浏览器刷新频率定时执行刷新页面，可以做一些定时任务
 function render() {
     // if (this.connectStatus) {
@@ -389,6 +413,6 @@ function render() {
     // console.log('camera:', camera.position)
     // console.log('scene:', scene.position)
     // scene.position.set(3000,0,0)
-    camera.lookAt( scene.position );
-    renderer.render( scene, camera );
+    camera.lookAt(scene.position);
+    renderer.render(scene, camera);
 }
